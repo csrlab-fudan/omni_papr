@@ -32,7 +32,7 @@ anal = 2/pi*ones(size(Ns))./(Ns.^0.5);
 anal = 2*anal + anal.*anal;
 loglog(Ns, anal, '--g', 'LineWidth', 1.5, Marker='o')
 xlabel('N', 'FontSize',12)
-ylabel('Variance', 'FontSize',12)
+ylabel('NMSE', 'FontSize',12)
 legend('Simulation', 'Analysis', 'FontSize', 12)
 
 
