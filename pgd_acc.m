@@ -1,5 +1,5 @@
 function [W, losses] = pgd_acc(M, N, k, papr, lp, epsilon, init, domain)
-if nargin<9
+if nargin<8
     domain = 'circle';
 end
 
@@ -14,8 +14,14 @@ else
 end
 
 if isempty(init)
-    w1 = exp(1j*pi/N*(0:M-1).*(1:M));
-    w2 = exp(1j*pi/N*(0:M-1).*(1:M));
+    w1 = exp(1j*pi/M*(0:M-1).*(1:M));
+    w2 = exp(1j*pi/N*(0:N-1).*(1:N));
+    if papr == 1
+         w1 = w1 .* exp(1j*pi*(0:M-1)); % shift the fluatuation outside the circle
+         w2 = w2 .* exp(1j*pi*(0:N-1)); 
+    end
+%     figure
+%     plot(abs(fft(w1, length(w1)*10)));
     W = w1.'*w2;
 else
     W = init;
@@ -34,7 +40,7 @@ deltas = zeros(1, N);
 criterion = inf;
 while criterion > epsilon && i<=iter_num
     WOld = W;
-    [s, W] = armijo_search(y, idx, s, lp, lb, papr);
+    [s, W] = armijo_search(y, idx, s, lp, papr);
     tOld = t;
     t = 1/2*(1+sqrt(1+4*t^2));
     y = W+(tOld-1)/t*(W-WOld);
@@ -47,7 +53,6 @@ while criterion > epsilon && i<=iter_num
     losses(i) = f;
     i = i+1;
 end
-close all
 figure
 semilogy(losses(losses~=0))
 end

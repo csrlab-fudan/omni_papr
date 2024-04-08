@@ -9,8 +9,8 @@ N1 = antRow; M1= overSamplingRate*N1;
 N2 = antCol; M2 = overSamplingRate*N2;
 
 
-beamSampleHorizonNum = 360;
-beamSampleVerticalNum = 180;
+beamSampleHorizonNum = 720;
+beamSampleVerticalNum = 360;
 beamSampleLength = beamSampleHorizonNum*beamSampleVerticalNum;
 broadbeampattern = zeros(beamSampleHorizonNum, beamSampleVerticalNum);
 mode = 'uniform'; % the mode of choosing discretized angles
@@ -27,7 +27,7 @@ xi = 0.02;
 [x2, ~] = gen_qiao(xi, N2);
 X3 = x1.'*x2;
 Xs = cat(3, X1, X2, X3);
-
+captions = {'Circle', 'Square', 'Method in [12]'};
 
 %%
 close all
@@ -45,8 +45,10 @@ for ii = 1:3
 end
 xlabel('Transmitted power', 'FontSize',12);
 ylabel('CDF', 'FontSize',12)
-legend('Circle', 'Square', 'Method in [12]', 'FontSize', 12)
+legend(captions, 'FontSize', 12)
 title('')
+
+[phi, theta] = meshgrid(beamPhiVec, beamThetaVec);
 
 nexttile
 for ii = 1:3
@@ -72,4 +74,34 @@ legend('Circle', 'Square', 'Method in [9]', 'FontSize',12)
 t.TileSpacing = 'compact';
 t.Padding = 'compact';
     
+%% 0dB
+papr = db2pow(0);
+X4 = pgd_acc(N1, N2, overSamplingRate, papr, lp, epsilon, []);
+Xs = {X1, X4};
+pattern = zeros(2, beamSampleHorizonNum, beamSampleVerticalNum);
+captions = {'(a)', '(b)'};
+for ii = 1:length(Xs)
+    X = Xs{ii};
+    X = X/norm(X, 'fro');
+    for i = 1:beamSampleHorizonNum
+        for j = 1:beamSampleVerticalNum
+            u = -sin(beamPhiVec(j));
+            v = -cos(beamThetaVec(i))*cos(beamPhiVec(j));
+            F  = exp(1j*pi*scaleFactor*(u*(0:N1-1).' + (v*(0:N2-1))));
+            pattern(ii, i, j) = abs(F(:).'*X(:))^2;
+        end
+    end
+    figure
+    t = tiledlayout(1, 1);
+    nexttile
+    [x,y,z] = sph2cart(theta,phi,squeeze(pattern(ii, :, :)));
+    mesh(x, y, z, squeeze(pattern(ii, :, :)));
+    colorbar('north')
+    axis equal;
+    axis off;
+    light('position',[5, 5, 0]);
+    t.TileSpacing = 'compact';
+    t.Padding = 'compact';
+end
+
 
